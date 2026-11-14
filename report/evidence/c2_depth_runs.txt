@@ -1,0 +1,46 @@
+=== max_depth=1
+│   3383 │   │   │   │                                                         │
+│   3384 │   │   │   │   if tests_passed != len(test_functions):               │
+│ ❱ 3385 │   │   │   │   │   raise Exception(f'Failed to pass tests for block  │
+│   3386 │   │   │                                                             │
+│   3387 │   │   │   handle_run_tests(                                         │
+│   3388 │   │   │   │   self,                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Exception: Failed to pass tests for block train_model
+csv exists: NO
+=== max_depth=2
+1/1 tests passed.
+1/1 tests passed.
+max_depth=2  test accuracy=0.9333
+1/1 tests passed.
+saved 30 predictions -> iris_predictions.csv
+1/1 tests passed.
+Pipeline run completed.
+csv exists: YES
+=== max_depth=3
+1/1 tests passed.
+1/1 tests passed.
+max_depth=3  test accuracy=0.9667
+1/1 tests passed.
+saved 30 predictions -> iris_predictions.csv
+1/1 tests passed.
+Pipeline run completed.
+csv exists: YES
+=== max_depth=4
+1/1 tests passed.
+1/1 tests passed.
+max_depth=4  test accuracy=0.9333
+1/1 tests passed.
+saved 30 predictions -> iris_predictions.csv
+1/1 tests passed.
+Pipeline run completed.
+csv exists: YES
+=== max_depth=5
+1/1 tests passed.
+1/1 tests passed.
+max_depth=5  test accuracy=0.9333
+1/1 tests passed.
+saved 30 predictions -> iris_predictions.csv
+1/1 tests passed.
+Pipeline run completed.
+csv exists: YES

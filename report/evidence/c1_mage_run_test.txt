@@ -1,0 +1,29 @@
+<string>:32: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+--------------------------------------------------------------
+1/1 tests passed.
+validate_iris: 150 rows, 3 classes, 0 missing values
+--------------------------------------------------------------
+1/1 tests passed.
+--------------------------------------------------------------
+1/1 tests passed.
+max_depth=3  test accuracy=0.9667
+--------------------------------------------------------------
+1/1 tests passed.
+saved 30 predictions -> iris_predictions.csv
+Confusion matrix (rows = true, columns = predicted):
+                 pred_setosa  pred_versicolor  pred_virginica
+true_setosa               10                0               0
+true_versicolor            0                9               1
+true_virginica             0                0              10
+
+Metrics:
+     class  precision  recall    f1  support
+    setosa      1.000     1.0 1.000       10
+versicolor      1.000     0.9 0.947       10
+ virginica      0.909     1.0 0.952       10
+  accuracy        NaN     NaN 0.967       30
+--------------------------------------------------------------
+1/1 tests passed.
+--------------------------------------------------------------
+1/1 tests passed.
+Pipeline run completed.
