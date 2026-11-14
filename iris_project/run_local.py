@@ -31,7 +31,7 @@ def main():
                 continue
             mod = importlib.import_module(f"iris_project.{FOLDERS[b['type']]}.{uuid}")
             func = next(f for n, f in inspect.getmembers(mod, inspect.isfunction)
-                        if f.__module__ == mod.__name__ and not n.startswith('test_') and n != 'test')
+                        if f.__module__ == mod.__name__ and not n.startswith('test_') and n not in ('test', *FOLDERS))
             ups = [outputs[u] for u in b['upstream_blocks']]
             outputs[uuid] = func(*ups, max_depth=args.max_depth)
             for n, f in inspect.getmembers(mod, inspect.isfunction):
