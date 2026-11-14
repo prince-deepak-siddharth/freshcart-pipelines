@@ -25,7 +25,7 @@ def tbl(rows, widths, header=True):
           ("LEFTPADDING", (0, 0), (-1, -1), 3), ("RIGHTPADDING", (0, 0), (-1, -1), 3),
           ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]
     if header: st.append(("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f4e79")))
-    t.setStyle(TableStyle(st)); return t
+    t.setStyle(TableStyle(st)); t._rows = rows; t._header = header; return t
 def code(t): return Preformatted(t, CODE)
 
 def footer(c, d):
@@ -179,7 +179,8 @@ S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
       code("\n".join(rd("stream/driver_Meena.log").splitlines()[:8])),
       P("D2. Dispatcher excerpt", H2), code("\n".join(l[:150] for l in rd("stream/d2_dispatcher.log").splitlines()[:12]))]
 
-doc = SimpleDocTemplate("Report.pdf", pagesize=A4, leftMargin=1.6 * cm, rightMargin=1.6 * cm, topMargin=1.4 * cm, bottomMargin=1.6 * cm,
+if __name__ == "__main__":
+  doc = SimpleDocTemplate("Report.pdf", pagesize=A4, leftMargin=1.6 * cm, rightMargin=1.6 * cm, topMargin=1.4 * cm, bottomMargin=1.6 * cm,
                         title="From Git to Gold - Report")
-doc.build(S, onFirstPage=footer, onLaterPages=footer)
-print("built")
+  doc.build(S, onFirstPage=footer, onLaterPages=footer)
+  print("built")
