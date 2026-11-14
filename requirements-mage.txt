@@ -1,3 +1,4 @@
 # only needed to actually run the pipeline in Mage (not needed by CI)
 -r requirements.txt
 mage-ai
+pyyaml

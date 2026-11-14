@@ -8,13 +8,21 @@ blocks:
   language: python
   upstream_blocks: []
   downstream_blocks:
+  - validate_iris
+- uuid: validate_iris
+  name: validate_iris
+  type: transformer
+  language: python
+  upstream_blocks:
+  - load_iris
+  downstream_blocks:
   - prepare_data
 - uuid: prepare_data
   name: prepare_data
   type: transformer
   language: python
   upstream_blocks:
-  - load_iris
+  - validate_iris
   downstream_blocks:
   - train_model
 - uuid: train_model
