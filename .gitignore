@@ -1,0 +1,23 @@
+# secrets
+.env
+*.env
+# data / model artefacts
+*.pkl
+*.csv
+mage.log
+*.log
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+# mage runtime
+.logs/
+.variables/
+iris_project/.file_versions/
+iris_project/.variables/
+iris_project/.logs/
+# local scratch
+freshcart_landing/
+report/build/
