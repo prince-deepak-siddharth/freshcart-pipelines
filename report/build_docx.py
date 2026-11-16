@@ -44,6 +44,10 @@ for f in br.S:
             p = d.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; fill(p, f.text, 20, RGBColor(0x1F, 0x4E, 0x79), True)
         elif n in ("s", "s2"):
             p = d.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; fill(p, f.text)
+        elif n == "BL":
+            p = d.add_paragraph(style="List Bullet"); p.paragraph_format.space_after = Pt(2); fill(p, f.text)
+        elif n == "BL2":
+            p = d.add_paragraph(style="List Bullet 2"); p.paragraph_format.space_after = Pt(1); fill(p, f.text)
         elif n == "H1": fill(d.add_heading("", 1), f.text)
         elif n == "H2": fill(d.add_heading("", 2), f.text)
         else:
