@@ -20,8 +20,7 @@ iris_project/.variables/
 iris_project/.logs/
 # local scratch
 freshcart_landing/
-report/build/
 context/
 private_notes/
-report/evidence/stream/
 iris_project/.ssh_tunnel/
+report/

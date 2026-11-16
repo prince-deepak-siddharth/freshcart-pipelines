@@ -8,7 +8,6 @@ freshcart-pipelines/
 ├── iris_project/       Mage project: load_iris -> validate_iris -> prepare_data -> train_model -> save_results / evaluate_model (Part C)
 ├── stream/             dispatcher.py, driver.py (+ bonus consumer) (Part D)
 ├── tests/              pytest tests, run by CI (Part A3)
-├── report/             report sources + generated PDF
 └── .github/workflows/ci.yml
 ```
 
