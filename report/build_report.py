@@ -256,8 +256,12 @@ def _shot(title, fname, caption, w=16.5):
     return [KeepTogether(out)]
 LOCAL = "Rendered from the real saved output of the notebook elt/freshcart_elt.ipynb (run on my own Snowflake account)."
 S += [P("Screenshots", H2)]
-S += _shot("A3 - GitHub Actions: green, red (test_size = 0.3) and green again after the fix", "A3_github_actions_runs.png",
-           "Screenshot of the public Actions page of the repository: CI #1 green, CI #2 red, CI #3 green (fix). Add your own screenshot of the red run's failing pytest step if you wish.")
+S += _shot("A3 - GitHub Actions: GREEN (passing) run", "A3_green_run.png",
+           "Actions tab after the first push: CI #1 passed (commit 2f11751, 41 s). Screenshot taken by me.")
+S += _shot("A3 - GitHub Actions: RED (failing) run after setting test_size = 0.3", "A3_red_run_pytest_step.png",
+           "Job log of CI #2: the Run pytest step fails with AssertionError: assert np.int64(105) == 120 (1 failed). Screenshot taken by me.", w=15)
+S += _shot("A3 - the fix: Actions list showing green, red and green again", "A3_github_actions_runs.png",
+           "Actions page after the fixing commit: CI #1 green, CI #2 red (Temporarily change test_size to 0.3), CI #3 green (Fix test_size back to 0.2).")
 S += _shot("B1 - Baseline run and comparison with the expected numbers", "B1_baseline.png", LOCAL)
 S += _shot("B3 - reasons for ORD-1006 before and after the new rule", "B3_reasons.png", LOCAL)
 S += _shot("B4 - SCD2 change, prediction vs actual, idempotency", "B4_scd2.png", LOCAL)
