@@ -27,43 +27,62 @@ ax.text(9.5, 6.1, "iris_classifier pipeline (metadata.yaml)", ha="center", fonts
 plt.savefig("block_graph.png", dpi=170, bbox_inches="tight"); plt.close()
 
 # ---------------- integration diagram ----------------
-fig, ax = plt.subplots(figsize=(10, 6.6)); ax.set_xlim(0, 20); ax.set_ylim(0, 13); ax.axis("off")
-# Git + CI lane
-ax.text(0.2, 12.4, "1  CODE: Git  ->  CI", fontsize=9.5, weight="bold", color="#1f4e79")
-for x, t in [(0.2, "Working\nfolder"), (3.4, "Local Git\n(.git)"), (6.6, "GitHub\n(remote)"), (9.8, "GitHub Actions\npytest (py3.12)")]:
-    box(ax, x, 10.6, 2.6, 1.4, t, fc="#fff2cc", ec="#b38f00")
-for x, lab in [(2.8, "add+commit"), (6.0, "push"), (9.2, "on every push")]:
-    arrow(ax, x, 11.3, x + 0.6, 11.3); ax.text(x + 0.3, 12.1, lab, fontsize=6.5, ha="center")
-ax.text(12.8, 11.3, "green = OK\nred = fix it", fontsize=7.5, va="center")
-ax.text(15.6, 11.3, "repo: elt/  iris_project/\nstream/  tests/  .github/", fontsize=7.5, color="#555", va="center")
-# ELT lane
-ax.text(0.2, 9.3, "2  ELT on Snowflake (batch)", fontsize=9.5, weight="bold", color="#1f4e79")
-elt = [(0.2, "Sample APIs\nweb, mobile,\nCRM, FX"), (3.4, "Landing files\n.json.gz\nwrite_landing()"), (6.6, "BRONZE\nraw VARIANT\nPUT+COPY INTO"),
-       (9.8, "SILVER\nclean, dedup,\nSCD2, FX"), (13.0, "GOLD fct_orders\nMERGE\n(idempotent)")]
-for x, t in elt: box(ax, x, 7.3, 2.6, 1.5, t, fc="#dbe9f6")
-for x, _ in elt[:-1]: arrow(ax, x + 2.6, 8.05, x + 3.2, 8.05)
-box(ax, 9.8, 5.4, 2.6, 1.3, "QUARANTINE\nbad rows +\nreasons", fc="#f8cecc"); arrow(ax, 11.1, 7.3, 11.1, 6.7)
-box(ax, 16.3, 7.3, 3.3, 1.5, "quality_checks()\n6 checks, all = 0", fc="#d5e8d4"); arrow(ax, 15.6, 8.05, 16.3, 8.05)
-# ML lane
-ax.text(0.2, 4.7, "3  ML pipeline (Mage)", fontsize=9.5, weight="bold", color="#1f4e79")
-ml = [(0.2, "load_iris"), (2.9, "validate_iris"), (5.6, "prepare_data"), (8.3, "train_model\n@test gate")]
-for x, t in ml: box(ax, x, 2.9, 2.3, 1.3, t, fc="#e1d5e7", ec="#6c4a82")
-for x, _ in ml[:-1]: arrow(ax, x + 2.3, 3.55, x + 2.7, 3.55)
-box(ax, 11.4, 3.7, 2.3, 1.0, "save_results\n(CSV)", fc="#e1d5e7", ec="#6c4a82")
-box(ax, 11.4, 2.2, 2.6, 1.0, "evaluate_model\n(metrics)", fc="#e1d5e7", ec="#6c4a82")
-arrow(ax, 10.6, 3.7, 11.4, 4.2); arrow(ax, 10.6, 3.4, 11.4, 2.7)
-# stream lane
-ax.text(0.2, 1.6, "4  Stream (RabbitMQ)", fontsize=9.5, weight="bold", color="#1f4e79")
-box(ax, 0.2, 0.0, 2.8, 1.2, "dispatcher.py\ncity.zone.type", fc="#ffe6cc", ec="#b35c00")
-box(ax, 4.2, 0.0, 3.2, 1.2, "topic exchange\nrapido-dispatch", fc="#ffe6cc", ec="#b35c00")
-box(ax, 8.6, 0.0, 3.0, 1.2, "driver queues\n(binding patterns)\nACK / NACK", fc="#ffe6cc", ec="#b35c00")
-arrow(ax, 3.0, 0.6, 4.2, 0.6); arrow(ax, 7.4, 0.6, 8.6, 0.6)
-box(ax, 13.4, 0.0, 3.2, 1.2, "bonus consumer\n1-min batch", fc="#ffe6cc", ec="#b35c00")
-arrow(ax, 11.6, 0.6, 13.4, 0.6)
-ax.text(12.5, 0.85, "orders\nqueue", fontsize=6.5, ha="center", color="#555")
-arrow(ax, 15.0, 1.2, 15.0, 7.3, color="#b35c00")   # consumer -> landing/bronze lane
-ax.text(15.15, 4.2, "write_landing()\n+ load_file()\n-> same bronze\n-> gold", fontsize=7, color="#b35c00")
-# git feeds everything
-arrow(ax, 1.5, 10.6, 1.5, 8.8, color="#999"); ax.text(1.7, 9.6, "notebooks / code\nversioned", fontsize=6.5, color="#777")
-plt.savefig("integration.png", dpi=170, bbox_inches="tight"); plt.close()
+fig, ax = plt.subplots(figsize=(11, 8.2)); ax.set_xlim(-0.3, 22); ax.set_ylim(-1.9, 13.6); ax.axis("off")
+DONE = dict(fc="#c6e7c6", ec="#2e7d32")
+def lane(y, title): ax.text(0.0, y, title, fontsize=10, weight="bold", color="#1f4e79")
+def conn(x1, x2, y): arrow(ax, x1, y, x2, y)
+
+# ---- lane 1: code -> CI ----
+lane(12.9, "1  CODE: Git -> CI")
+xs = [0.0, 3.4, 6.8, 10.2]
+for x, t in zip(xs, ["Working\nfolder", "Local Git\n(.git)", "GitHub\n(remote)", "GitHub Actions\npytest (py3.12)"]):
+    box(ax, x, 10.8, 2.7, 1.6, t, fc="#fff2cc", ec="#b38f00")
+for x, lab in zip(xs[:3], ["add + commit", "push", "on every push"]):
+    conn(x + 2.7, x + 3.4, 11.6); ax.text(x + 3.05, 12.55, lab, fontsize=6.5, ha="center")
+conn(12.9, 13.7, 11.6)
+box(ax, 13.7, 10.8, 3.6, 1.6, "CI result\ngreen = OK, merge\nred = fix first", **DONE)
+
+# ---- lane 2: ELT ----
+lane(9.9, "2  ELT on Snowflake (batch)")
+ex = [0.0 + 2.95 * k for k in range(7)]
+labels = ["Sample APIs\nweb, mobile,\nCRM, FX", "Landing files\n.json.gz\nwrite_landing()", "BRONZE\nraw VARIANT\nPUT + COPY",
+          "SILVER\nclean, dedup,\nSCD2, FX", "GOLD\nfct_orders\nMERGE", "quality_checks()\n6 checks = 0"]
+for x, t in zip(ex, labels): box(ax, x, 7.9, 2.5, 1.6, t, fc="#dbe9f6")
+for k in range(5): conn(ex[k] + 2.5, ex[k + 1], 8.7)
+conn(ex[5] + 2.5, ex[6], 8.7)
+box(ax, ex[6], 7.9, 2.5, 1.6, "DONE\nGold data ready\nfor analytics", **DONE)
+box(ax, ex[3], 5.85, 2.5, 1.25, "QUARANTINE\nbad rows +\nreasons", fc="#f8cecc"); arrow(ax, ex[3] + 1.25, 7.9, ex[3] + 1.25, 7.1)
+
+# ---- lane 3: ML ----
+lane(5.1, "3  ML pipeline (Mage)")
+mx = [0.0, 3.0, 6.0, 9.0]
+for x, t in zip(mx, ["load_iris", "validate_iris", "prepare_data", "train_model\n@test gate"]):
+    box(ax, x, 3.1, 2.5, 1.5, t, fc="#e1d5e7", ec="#6c4a82")
+for x in mx[:3]: conn(x + 2.5, x + 3.0, 3.85)
+box(ax, 12.3, 3.9, 2.6, 1.1, "save_results\n(CSV)", fc="#e1d5e7", ec="#6c4a82")
+box(ax, 12.3, 2.4, 2.6, 1.1, "evaluate_model\n(metrics)", fc="#e1d5e7", ec="#6c4a82")
+arrow(ax, 11.5, 3.95, 12.3, 4.45); arrow(ax, 11.5, 3.75, 12.3, 2.95)
+box(ax, 16.1, 3.0, 3.4, 1.7, "DONE\niris_predictions.csv\n+ confusion matrix", **DONE)
+arrow(ax, 14.9, 4.45, 16.1, 4.0); arrow(ax, 14.9, 2.95, 16.1, 3.6)
+
+# ---- lane 4: stream ----
+lane(1.45, "4  Stream (RabbitMQ)")
+box(ax, 0.0, -0.6, 2.9, 1.5, "dispatcher.py\ncity.zone.type", fc="#ffe6cc", ec="#b35c00")
+box(ax, 3.8, -0.6, 3.1, 1.5, "topic exchange\nrapido-dispatch", fc="#ffe6cc", ec="#b35c00")
+box(ax, 7.8, -0.6, 3.3, 1.5, "driver queues\n(binding patterns)\nACK / NACK", fc="#ffe6cc", ec="#b35c00")
+conn(2.9, 3.8, 0.15); conn(6.9, 7.8, 0.15)
+box(ax, 12.0, -0.6, 3.4, 1.5, "DONE\ngood = ACK\nbad = NACK (dropped)", **DONE); conn(11.1, 12.0, 0.15)
+box(ax, 16.6, -0.6, 3.6, 1.5, "bonus consumer\n1-min batch of orders", fc="#ffe6cc", ec="#b35c00")
+# exchange -> consumer: routed underneath the stream lane so it crosses no box
+ax.plot([5.35, 5.35], [-0.6, -1.2], color="#b35c00", lw=1.2)
+ax.plot([5.35, 18.4], [-1.2, -1.2], color="#b35c00", lw=1.2)
+arrow(ax, 18.4, -1.2, 18.4, -0.6, color="#b35c00")
+ax.text(11.9, -1.62, "same exchange: order messages for the bonus consumer", fontsize=6.5, ha="center", color="#b35c00")
+# consumer -> bronze: up the right-hand side, then left under the quarantine box
+ax.plot([19.9, 19.9], [0.9, 5.45], color="#b35c00", lw=1.2)
+ax.plot([19.9, ex[2] + 1.25], [5.45, 5.45], color="#b35c00", lw=1.2)
+ax.plot([ex[2] + 1.25, ex[2] + 1.25], [5.45, 7.2], color="#b35c00", lw=1.2)
+arrow(ax, ex[2] + 1.25, 7.2, ex[2] + 1.25, 7.9, color="#b35c00")
+ax.text(12.0, 5.6, "write_landing() + load_file() -> same bronze -> gold", fontsize=7, color="#b35c00", ha="center")
+plt.savefig("integration.png", dpi=170, bbox_inches="tight", pad_inches=0.25); plt.close()
 print("ok")
