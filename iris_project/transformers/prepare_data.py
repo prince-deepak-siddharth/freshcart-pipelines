@@ -11,7 +11,7 @@ if 'transformer' not in globals() or 'test' not in globals():
         def test(func):
             return func
 
-TEST_SIZE = 0.2
+TEST_SIZE = 0.3
 RANDOM_STATE = 42
 
 
