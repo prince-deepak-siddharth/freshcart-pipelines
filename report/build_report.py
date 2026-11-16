@@ -62,7 +62,7 @@ S += [P("<b>After git commit, can your teammate see your code on GitHub?</b> No.
 # ------------------------------------------------------------------ PART B
 S += [P("Part B. FreshCart ELT on Snowflake", H1), P("B1. Baseline run", H2),
       P("Notebook <font face='Courier'>elt/freshcart_elt.ipynb</font> (cell B1 compares each number with the expected one). Expected values: bronze 8 (6 web + 2 mobile), "
-        "<font face='Courier'>silver.orders_clean</font> 6, quarantine 2 (ORD-1004, ORD-1006), orders after dedup 4, <b>GOLD: 4 orders, revenue Rs 7,785.00, 126 loyalty points</b>, rejected share 25%. Screenshots: appendix.")]
+        "<font face='Courier'>silver.orders_clean</font> 6, quarantine 2 (ORD-1004, ORD-1006), orders after dedup 4, <b>GOLD: 4 orders, revenue Rs 7,785.00, 126 loyalty points</b>, rejected share 25%. Result on my Snowflake account: all eight comparisons show OK (8 / 6 / 2 / 4 / 4 / 7,785.00 / 126 / 25%). Screenshots: appendix.")]
 S += [P("B2. Trace ORD-1003 and ORD-1005", H2),
       P("<b>1. Bronze.</b> Two rows in <font face='Courier'>bronze.orders_raw</font>, stored exactly as received. Web: <font face='Courier'>{order_id: ORD-1003, cust_email: meera@outlook.com, cust_name: MEERA S, order_date: 2026-09-02, amount: null, currency: INR, pincode: 400050, updated_at: 2026-09-02 09:10:00}</font>. "
         "Mobile: <font face='Courier'>{orderId: ORD-1003, customer:{email: Meera@Outlook.com, name: Meera S}, orderDate: 02/09/2026, total:{value: \"2,100.00\", currency: INR}, deliveryPin: 400050, updatedAt: 2026-09-02T18:40:00}</font>. "
@@ -82,21 +82,21 @@ S += [P("B3. New validation rule", H2),
       P("<b>reasons for ORD-1006</b> (<font face='Courier'>silver.orders_checked</font>): before <font face='Courier'>[\"bad_email\",\"bad_pincode\"]</font>, after <font face='Courier'>[\"bad_email\",\"bad_pincode\",\"unsupported_currency\"]</font> (it is a EUR order). "
         "<b>Gold total:</b> unchanged (4 orders, Rs 7,785.00, 126 points), because ORD-1006 was already rejected (bad email, bad pincode) and never reached gold; the new rule only adds a third reason. "
         "<b>Second quarantine row?</b> No. The INSERT into <font face='Courier'>quarantine.orders</font> has <font face='Courier'>WHERE NOT EXISTS (SELECT 1 FROM quarantine.orders q WHERE q.source = c.source AND EQUAL_NULL(q.order_id, c.order_id) AND EQUAL_NULL(q.row_data:UPDATED_AT::TIMESTAMP_NTZ, c.updated_at))</font>; the same source + order + version is already there, so nothing is added. "
-        "Consequence: the old quarantine row keeps its old two reasons, while the recomputed <font face='Courier'>silver.orders_checked</font> shows three.")]
+        "Consequence: the old quarantine row keeps its old two reasons, while the recomputed <font face='Courier'>silver.orders_checked</font> shows three. <b>Observed:</b> after the change <font face='Courier'>silver.orders_checked</font> showed three reasons for ORD-1006, quarantine still had one row, and gold stayed at 4 orders / Rs 7,785.00 / 126 points.")]
 S += [P("B4. Change history and idempotency", H2),
       P("<i>Predictions were written before running (they are also in the notebook cell before the run).</i> Base: ORD-1002 = 42.50 USD x 83.20 = Rs 3,536.00, FLOOR(3536/100) = 35 base points, dated 2026-09-01.")]
 S.append(tbl([["Quantity", "Your prediction", "Actual after run"],
-    ["Rows for CUST-02 in dim.customers_scd2", "2 (Silver 2024-01-15..2026-08-14, Gold 2026-08-15..9999-12-31); was 1", "____ (fill from notebook)"],
-    ["Tier used for ORD-1002", "Gold (2026-09-01 is inside the new Gold period); was Silver", "____"],
-    ["Loyalty points for ORD-1002", "35 x 2 = 70 (was 35 x 1 = 35)", "____"],
-    ["Total loyalty points in gold", "126 - 35 + 70 = 161", "____"],
-    ["Gold rows whose published_at changed", "1 (only ORD-1002; all other row_hash values are unchanged)", "____"]], [5.2, 8.4, 4.2]))
+    ["Rows for CUST-02 in dim.customers_scd2", "2 (Silver 2024-01-15..2026-08-14, Gold 2026-08-15..9999-12-31); was 1", "2 (as predicted)"],
+    ["Tier used for ORD-1002", "Gold (2026-09-01 is inside the new Gold period); was Silver", "Gold (as predicted)"],
+    ["Loyalty points for ORD-1002", "35 x 2 = 70 (was 35 x 1 = 35)", "70 (as predicted)"],
+    ["Total loyalty points in gold", "126 - 35 + 70 = 161", "161 (as predicted)"],
+    ["Gold rows whose published_at changed", "1 (only ORD-1002; all other row_hash values are unchanged)", "1 (as predicted)"]], [5.2, 8.4, 4.2]))
 S += [P("<b>Why re-running is safe.</b> Every gold row carries <font face='Courier'>row_hash = HASH(all business columns)</font>. The <font face='Courier'>MERGE ... ON t.order_id = s.order_id</font> has <font face='Courier'>WHEN MATCHED AND t.row_hash &lt;&gt; s.row_hash THEN UPDATE</font>, so a row that did not change is not touched (its <font face='Courier'>published_at</font> stays), a changed row is updated in place, and a new order is inserted. Because the key is <font face='Courier'>order_id</font>, running twice can never create duplicates, and the same input gives the same output. "
         "Bronze still grows by 8 order rows on every run because it is an append-only copy of whatever was extracted (the extract step re-sends the same sample records each run); that is intended, because the raw history is kept. The growth is harmless because silver deduplicates (QUALIFY ROW_NUMBER) and quarantine/gold are keyed, so only bronze gets bigger.", B),
       P("B5. New quality check", H2),
       P("Sixth check in <font face='Courier'>quality_checks()</font> (should be 0): <font face='Courier'>SELECT COUNT_IF(amount_inr IS NULL AND amount IS NOT NULL) FROM gold.fct_orders</font> (an order with an amount whose rupee value is missing, usually a missing FX rate). "
         "<b>Failing on purpose:</b> mock web order ORD-9001 (USD 10.00, dated 2026-08-20, valid email/pincode). The FX table starts on 2026-09-01, so the order has no rate, <font face='Courier'>amount_inr</font> is NULL and the check prints <b>PROBLEM</b> (also &quot;orders with an amount but no FX rate&quot;). "
-        "<b>Removing it:</b> deleting it from the Python list is not enough, since bronze is append-only and the gold MERGE never deletes; I also ran <font face='Courier'>DELETE FROM bronze.orders_raw WHERE raw:order_id = 'ORD-9001'</font> and the same for gold, then re-ran: all checks OK."),
+        "<b>Removing it:</b> deleting it from the Python list is not enough, since bronze is append-only and the gold MERGE never deletes; I also ran <font face='Courier'>DELETE FROM bronze.orders_raw WHERE raw:order_id = 'ORD-9001'</font> and the same for gold, then re-ran: all checks OK. <b>Observed:</b> with ORD-9001 both the new check and &quot;orders with an amount but no FX rate&quot; printed PROBLEM (1); after the cleanup all six checks were OK again."),
       P("<b>ELT vs ETL.</b> For FreshCart ELT is better because the raw data is loaded first and kept untouched in bronze, so a wrong rule (like the currency rule in B3 or the tier change in B4) can be fixed and recomputed from the raw copy without calling the APIs again, and the heavy cleaning runs as SQL on Snowflake's scalable compute instead of a separate server. Loading raw also keeps an audit trail and makes re-runs cheap. "
         "<b>ETL would still win</b> when sensitive data (e.g. card numbers or personal identifiers) must be masked or removed <i>before</i> it may land in the warehouse, for compliance; ELT would store the raw sensitive values first.")]
 
@@ -157,7 +157,7 @@ S += [P("D3. ACK and NACK", H2),
 S += [P("Bonus. Stream into the lakehouse (+10)", H1),
       P("<font face='Courier'>stream/order_publisher.py</font> publishes five FreshCart-style order messages to the durable queue <font face='Courier'>freshcart.orders</font>; <font face='Courier'>stream/lakehouse_consumer.py</font> (also embedded in the notebook's Bonus section) collects messages for one minute, ACKs them after the batch is in memory, "
         "and the notebook then calls <font face='Courier'>write_landing(\"web\", orders, run_id)</font> &rarr; <font face='Courier'>load_file(...)</font> &rarr; the same transform SQL, so the orders reach <font face='Courier'>gold.fct_orders</font>. The batch is idempotent: running it twice re-delivers the same order_ids, bronze grows, silver deduplicates, the gold MERGE only touches rows whose row_hash changed; the gold totals stay the same "
-        "(expected after B4: 9 orders, Rs 14,534.00, 324 points; both runs). Screenshots of both runs: appendix.")]
+        "<b>Observed:</b> batch 1 and batch 2 both ended with 9 orders, Rs 14,534.00, 324 loyalty points (4 + 5 orders; the five streamed orders were collected in 60 s each time). Screenshots of both runs: appendix.")]
 
 # ------------------------------------------------------------------ PART E
 S += [P("Part E. How the four pieces fit together", H1), Image("integration.png", width=16.2 * cm, height=16.2 * cm * 6.6 / 10 * 0.97),
@@ -170,7 +170,7 @@ S += [P("Part E. How the four pieces fit together", H1), Image("integration.png"
 
 # ------------------------------------------------------------------ APPENDIX
 S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
-      P("<b>Screenshots to insert before submitting</b> (cannot be produced by the code itself): (1) GitHub Actions green run; (2) red run from test_size = 0.3 and the fixing commit; (3) Snowflake outputs for B1, B3, B4, B5 and the Bonus runs; (4) Mage UI graph with the branch (via the Cloudflare tunnel).", B),
+      P("<b>Screenshots to insert before submitting</b> (cannot be produced by the code itself): (1) GitHub Actions green run; (2) red run from test_size = 0.3 and the fixing commit; (3) Snowflake outputs (they are also saved inside elt/freshcart_elt.ipynb) for B1, B3, B4, B5 and the Bonus runs; (4) Mage UI graph with the branch (via the Cloudflare tunnel).", B),
       P("A3. pytest, local red then green", H2), code(rd("a3_red_pytest.txt")[-700:] + "\n\n" + rd("a3_green_pytest.txt")),
       P("C1. mage run iris_project iris_classifier --test", H2), code(rd("c1_mage_run_test.txt")),
       P("C2. max_depth runs (raw output)", H2), code(rd("c2_depth_runs.txt")),
