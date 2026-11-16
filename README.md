@@ -35,4 +35,5 @@ python stream/driver.py Arjun "bangalore.*.ride"
 python stream/driver.py Control "bangalore.#"
 python stream/dispatcher.py
 ```
-Secrets (Snowflake password, CloudAMQP URL) are never committed: they are read from `getpass` / environment variables.
+## Secrets
+Copy `.env.example` to `.env` and fill in your Snowflake login and (optionally) a RabbitMQ URL. `.env` is git-ignored and never committed; `.env.example` only holds placeholders. The notebook and stream scripts read the values from `.env` / environment variables and prompt for anything missing.

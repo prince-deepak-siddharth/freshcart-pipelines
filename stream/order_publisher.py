@@ -8,6 +8,12 @@ import os
 
 import pika
 
+try:  # optional: read RABBITMQ_URL from a local .env file (see .env.example)
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 QUEUE = 'freshcart.orders'
 
 # same shape as the website API (flat JSON) used by the FreshCart notebook
