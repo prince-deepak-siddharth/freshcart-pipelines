@@ -241,6 +241,21 @@ S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
       P("D2. Dispatcher excerpt", H2), code("\n".join(l[:150] for l in rd("stream/d2_dispatcher.log").splitlines()[:12]))]
 
 
+
+# ---- screenshot placeholders ----
+S += [P("Screenshots (insert each image under its heading; delete the grey line afterwards)", H2)]
+S += [P("<b>A3 - GitHub Actions: GREEN (passing) run</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: Actions tab, run with a green tick ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>A3 - GitHub Actions: RED (failing) run</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: run after temporarily setting test_size = 0.3, then the commit that fixes it ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>B1 - Snowflake: baseline outputs</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the first run_pipeline() output and the B1 comparison table (all OK) ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>B3 - Snowflake: reasons for ORD-1006 before and after</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the two cells that show the reasons array ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>B4 - Snowflake: SCD2 change and idempotency</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: prediction-vs-actual table and dim.customers_scd2 for CUST-02 ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>B5 - Snowflake: new check failing (PROBLEM) and fixed</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the run with ORD-9001 and the run after cleanup ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>C1 - Mage run (terminal)</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: output of: mage run iris_project iris_classifier --test ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>C3 - Mage UI: pipeline graph with the branch</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: through the Cloudflare tunnel: train_model -> save_results and evaluate_model ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>D2 / D3 - RabbitMQ: dispatcher + at least three drivers</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: consoles after about 2 minutes; show ACK lines and the NACK (REJECTED) lines ]</i></font>", B), Spacer(1, 70)]
+S += [P("<b>Bonus - Snowflake: two stream batches</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: gold totals identical after batch 1 and batch 2 ]</i></font>", B), Spacer(1, 70)]
+S += [PageBreak()]
+
 # ---- appendix: text copies of the Snowflake notebook outputs ----
 import json
 _nb = json.load(open("../elt/freshcart_elt.ipynb"))
