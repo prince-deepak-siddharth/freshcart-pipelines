@@ -1,0 +1,4 @@
+-- SELECT DISTINCT order_id, ARRAY_TO_STRING(reasons, ', ') FROM silver.orders_checked WHERE order_id='ORD-1006'
+('ORD-1006', 'bad_email, bad_pincode, unsupported_currency')
+-- SELECT COUNT(*), ARRAY_TO_STRING(ANY_VALUE(reasons), ', ') FROM quarantine.orders WHERE order_id='ORD-1006'
+(1, 'bad_email, bad_pincode')

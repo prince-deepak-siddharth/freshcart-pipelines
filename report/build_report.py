@@ -150,9 +150,14 @@ S += BL(["Mage runs a block's " + F("@test") + " functions right after the block
          "There is nothing to delete or roll back, and the failure shows up at the exact block that caused it."])
 S += [P("C3. Evaluation branch", H2), P(F("train_model") + " now has two downstream blocks. Edited " + F("metadata.yaml") + ":"),
       code("- uuid: train_model\n  ...\n  downstream_blocks:\n  - save_results\n  - evaluate_model\n...\n- uuid: evaluate_model\n  name: evaluate_model\n  type: transformer\n  language: python\n  upstream_blocks:\n  - train_model\n  downstream_blocks: []")]
-S += BL(["Confusion matrix for max_depth=3 (rows = true, columns = predicted): setosa 10/0/0, versicolor 0/9/1, virginica 0/0/10.",
-         "Metrics: setosa P=1.000 R=1.000 F1=1.000; versicolor P=1.000 R=0.900 F1=0.947; virginica P=0.909 R=1.000 F1=0.952; accuracy 0.967 (30 test rows).",
-         "Mage UI screenshot of the branch: appendix."])
+S += [P("Confusion matrix and metrics for max_depth=3 (30 test rows; output of the evaluate_model block):")]
+S.append(tbl([["true \\ predicted", "setosa", "versicolor", "virginica"],
+              ["setosa", "10", "0", "0"], ["versicolor", "0", "9", "1"], ["virginica", "0", "0", "10"]], [4.0, 3.0, 3.0, 3.0]))
+S.append(Spacer(1, 4))
+S.append(tbl([["class", "precision", "recall", "f1", "support"],
+              ["setosa", "1.000", "1.000", "1.000", "10"], ["versicolor", "1.000", "0.900", "0.947", "10"],
+              ["virginica", "0.909", "1.000", "0.952", "10"], ["accuracy", "-", "-", "0.967", "30"]], [3.5, 3.0, 3.0, 3.0, 3.0]))
+S += BL(["The Mage UI screenshot of the branched graph is in the appendix."])
 S += [P("C4. Own block", H2)]
 S += BL([F("validate_iris") + " (transformer) sits between load_iris and prepare_data.",
          "Its " + F("@test") + " asserts there are no missing values and exactly 3 classes, so bad input stops the pipeline before training.",
@@ -234,6 +239,33 @@ S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
       code("\n".join(rd("stream/driver_Control.log").splitlines()[:16] + ["..."] + [l for l in rd("stream/driver_Control.log").splitlines() if "REJECTED" in l])),
       code("\n".join(rd("stream/driver_Meena.log").splitlines()[:8])),
       P("D2. Dispatcher excerpt", H2), code("\n".join(l[:150] for l in rd("stream/d2_dispatcher.log").splitlines()[:12]))]
+
+
+# ---- appendix: text copies of the Snowflake notebook outputs ----
+import json
+_nb = json.load(open("../elt/freshcart_elt.ipynb"))
+def _out(prefix, nth=0, tail=None, head=None):
+    hits = [c for c in _nb["cells"] if c["cell_type"] == "code" and "".join(c["source"]).startswith(prefix)]
+    c = hits[nth]; txt = ""
+    for o in c.get("outputs", []):
+        txt += ("".join(o.get("text", "")) or "".join(o.get("data", {}).get("text/plain", ""))) + "\n"
+    txt = txt.replace("\u20b9", "Rs ").replace("\\n", " ")
+    txt = re.sub(r"[ ]{2,}(?=[\"\]])", " ", txt)
+    lines = [l.rstrip() for l in txt.splitlines() if l.strip()]
+    if head: lines = lines[:head]
+    if tail: lines = lines[-tail:]
+    return "\n".join(l[:135] for l in lines)
+S += [P("Snowflake outputs (copied from elt/freshcart_elt.ipynb, run on my own account)", H2),
+      P("<b>B1</b> - first run compared with the expected numbers:"), code(_out("# B1: compare")),
+      P("<b>B3</b> - reasons for ORD-1006 before and after the new rule; quarantine and gold:"),
+      code(_out('print("--- silver.orders_checked (recomputed every run) ---")')), code(_out('print("--- silver.orders_checked ---")')),
+      P("<b>B3</b> - full reasons array and quarantine row, from a read-only query run afterwards (the notebook table above is truncated by pandas):"), code(rd("b3_reasons_after.txt")),
+      P("<b>B4</b> - prediction vs actual, and the SCD2 rows of CUST-02:"), code(_out("new_event = ", tail=7)), code(_out("show(\"SELECT * FROM dim.customers_scd2 WHERE cust_id = 'CUST-02'")),
+      P("<b>B4</b> - idempotency (third run):"), code(_out("snap = snapshot()", tail=3)),
+      P("<b>B5</b> - the new check fails on purpose (ORD-9001), then everything is OK after cleanup:"),
+      code(_out("MOCK_WEB_ORDERS.append", tail=9)), code(_out("MOCK_WEB_ORDERS[:] =", tail=9)),
+      P("<b>Bonus</b> - gold after the second batch (identical to the first):"), code(_out("publish_orders()\nrun_stream_batch(seconds=60)\nshow", tail=6)),
+      code(_out('show("SELECT order_id, order_date, tier, amount, currency, a'))]
 
 if __name__ == "__main__":
   doc = SimpleDocTemplate("Report.pdf", pagesize=A4, leftMargin=1.6 * cm, rightMargin=1.6 * cm, topMargin=1.4 * cm, bottomMargin=1.6 * cm,
