@@ -9,11 +9,17 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table, Tab
 ROOT = ".."
 def sh(cmd): return subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=ROOT).stdout.strip()
 def rd(p): return open(f"evidence/{p}").read().rstrip()
+def ascii_lines(t):                      # drop lines with box-drawing characters that the PDF font cannot show
+    return "\n".join(l for l in t.splitlines() if not re.search(r"[^\x00-\x7f]", l))
+def from_def(t, n=110):                  # start a pytest excerpt at the test function and shorten very long lines
+    ls = t.splitlines(); i = next((k for k, l in enumerate(ls) if "def test_split" in l), 0)
+    return "\n".join(l[:n] for l in ls[i:])
 
 ss = getSampleStyleSheet()
 B = ParagraphStyle("B", parent=ss["BodyText"], fontName="Helvetica", fontSize=8.8, leading=11.4, spaceAfter=3)
 H1 = ParagraphStyle("H1", parent=ss["Heading1"], fontSize=13, textColor=colors.HexColor("#1f4e79"), spaceBefore=8, spaceAfter=3)
 H2 = ParagraphStyle("H2", parent=ss["Heading2"], fontSize=10.2, textColor=colors.HexColor("#2e75b6"), spaceBefore=6, spaceAfter=2)
+KWN = ParagraphStyle("KWN", parent=B, keepWithNext=1)
 CODE = ParagraphStyle("C", fontName="Courier", fontSize=6.6, leading=7.8)
 TC = ParagraphStyle("TC", parent=B, fontSize=7.8, leading=9.6, spaceAfter=0)
 TH = ParagraphStyle("TH", parent=TC, textColor=colors.white, fontName="Helvetica-Bold")
@@ -97,7 +103,7 @@ S += BL(["The responsible table is " + F("dim.customers_scd2") + ", joined in " 
          "ORD-1005 is dated 2026-09-03 &rarr; Gold period &rarr; multiplier 2 (" + F("ref.tier_multiplier") + "): FLOOR(899/100) x 2 = 8 x 2 = <b>16 points</b>.",
          "ORD-1001 is dated 2026-09-01 &rarr; Silver period &rarr; FLOOR(1250/100) x 1 = <b>12 points</b>.",
          "So the tier used is the one valid <i>on the order date</i>, not today's tier."])
-S += [P("B3. New validation rule", H2), P("Line added inside " + F("ARRAY_CONSTRUCT_COMPACT(...)") + " of SQL_10:"),
+S += [P("B3. New validation rule", H2), P("Line added inside " + F("ARRAY_CONSTRUCT_COMPACT(...)") + " of SQL_10:", KWN),
       code("IFF(currency IS NULL OR currency NOT IN ('INR', 'USD'), 'unsupported_currency', NULL)")]
 S += BL(["<b>reasons for ORD-1006</b> (" + F("silver.orders_checked") + "): before " + F('["bad_email","bad_pincode"]') + "; after " + F('["bad_email","bad_pincode","unsupported_currency"]') + " (it is a EUR order).",
          "<b>Does the gold total change?</b> No: still 4 orders, Rs 7,785.00, 126 points. ORD-1006 was already rejected (bad email, bad pincode) and never reached gold; the rule only adds a third reason.",
@@ -106,7 +112,7 @@ S += BL(["<b>reasons for ORD-1006</b> (" + F("silver.orders_checked") + "): befo
          "Consequence: the old quarantine row keeps its old two reasons, while the recomputed " + F("silver.orders_checked") + " shows three.",
          "<b>Observed on Snowflake:</b> three reasons in silver, one quarantine row, gold unchanged."])
 S += [P("B4. Change history and idempotency", H2),
-      P("<i>Predictions were written before running (they are also in the notebook cell before the run).</i> Basis: ORD-1002 = 42.50 USD x 83.20 = Rs 3,536.00, FLOOR(3536/100) = 35 base points, dated 2026-09-01.")]
+      P("<i>Predictions were written before running (they are also in the notebook cell before the run).</i> Basis: ORD-1002 = 42.50 USD x 83.20 = Rs 3,536.00, FLOOR(3536/100) = 35 base points, dated 2026-09-01.", KWN)]
 S.append(tbl([["Quantity", "Your prediction", "Actual after run"],
     ["Rows for CUST-02 in dim.customers_scd2", "2 (Silver 2024-01-15..2026-08-14, Gold 2026-08-15..9999-12-31); was 1", "2 (as predicted)"],
     ["Tier used for ORD-1002", "Gold (2026-09-01 is inside the new Gold period); was Silver", "Gold (as predicted)"],
@@ -148,9 +154,9 @@ S += BL(["Mage runs a block's " + F("@test") + " functions right after the block
          "Downstream blocks are never started, so " + F("save_results") + " does not execute and no CSV is written (max_depth=1).",
          "<b>Why better than saving first and checking afterwards:</b> a bad result is never saved, so nobody can pick up a poor file by mistake.",
          "There is nothing to delete or roll back, and the failure shows up at the exact block that caused it."])
-S += [P("C3. Evaluation branch", H2), P(F("train_model") + " now has two downstream blocks. Edited " + F("metadata.yaml") + ":"),
+S += [P("C3. Evaluation branch", H2), P(F("train_model") + " now has two downstream blocks. Edited " + F("metadata.yaml") + ":", KWN),
       code("- uuid: train_model\n  ...\n  downstream_blocks:\n  - save_results\n  - evaluate_model\n...\n- uuid: evaluate_model\n  name: evaluate_model\n  type: transformer\n  language: python\n  upstream_blocks:\n  - train_model\n  downstream_blocks: []")]
-S += [P("Confusion matrix and metrics for max_depth=3 (30 test rows; output of the evaluate_model block):")]
+S += [P("Confusion matrix and metrics for max_depth=3 (30 test rows; output of the evaluate_model block):", KWN)]
 S.append(tbl([["true \\ predicted", "setosa", "versicolor", "virginica"],
               ["setosa", "10", "0", "0"], ["versicolor", "0", "9", "1"], ["virginica", "0", "0", "10"]], [4.0, 3.0, 3.0, 3.0]))
 S.append(Spacer(1, 4))
@@ -232,9 +238,9 @@ S += BL(["<b>What broke:</b> my first RabbitMQ run failed with " + F("pika.excep
 # ------------------------------------------------------------------ APPENDIX
 S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
       P("<b>Evidence in this appendix:</b> the screenshots are at the start (section \"Screenshots\"), followed by text copies of the raw outputs. The GitHub Actions list is a real screenshot; the Snowflake panels are rendered from the saved notebook outputs and the Mage UI is a real browser screenshot of my local Mage server.", B),
-      P("A3. pytest, local red then green", H2), code(rd("a3_red_pytest.txt")[-700:] + "\n\n" + rd("a3_green_pytest.txt")),
+      P("A3. pytest, local red then green", H2), code(from_def(rd("a3_red_pytest.txt")) + "\n\n" + rd("a3_green_pytest.txt")),
       P("C1. mage run iris_project iris_classifier --test", H2), code(rd("c1_mage_run_test.txt")),
-      P("C2. max_depth runs (raw output)", H2), code(rd("c2_depth_runs.txt")),
+      P("C2. max_depth runs (raw output)", H2), code(ascii_lines(rd("c2_depth_runs.txt"))),
       P("D3. Console excerpt, 2-minute run (Control and Meena)", H2),
       code("\n".join(rd("stream/driver_Control.log").splitlines()[:16] + ["..."] + [l for l in rd("stream/driver_Control.log").splitlines() if "REJECTED" in l])),
       code("\n".join(rd("stream/driver_Meena.log").splitlines()[:8])),
