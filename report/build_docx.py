@@ -37,7 +37,11 @@ def shade(cell, hexcolor):
 d = Document()
 sec = d.sections[0]; sec.left_margin = sec.right_margin = Cm(2); sec.top_margin = sec.bottom_margin = Cm(1.8)
 d.styles["Normal"].font.name = "Calibri"; d.styles["Normal"].font.size = Pt(9.5)
-for f in br.S:
+def _flat(xs):
+    for x in xs:
+        if hasattr(x, '_content'): yield from _flat(x._content)
+        else: yield x
+for f in _flat(br.S):
     if isinstance(f, Paragraph):
         n = f.style.name
         if n == "T":

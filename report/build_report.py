@@ -1,4 +1,4 @@
-import subprocess, re
+import subprocess, re, os
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
@@ -231,7 +231,7 @@ S += BL(["<b>What broke:</b> my first RabbitMQ run failed with " + F("pika.excep
 
 # ------------------------------------------------------------------ APPENDIX
 S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
-      P("<b>Screenshots to insert before submitting</b> (cannot be produced by the code itself): (1) GitHub Actions green run; (2) red run from test_size = 0.3 and the fixing commit; (3) Snowflake outputs (they are also saved inside elt/freshcart_elt.ipynb) for B1, B3, B4, B5 and the Bonus runs; (4) Mage UI graph with the branch (via the Cloudflare tunnel).", B),
+      P("<b>Evidence in this appendix:</b> the screenshots are at the start (section \"Screenshots\"), followed by text copies of the raw outputs. The GitHub Actions list is a real screenshot; the Snowflake panels are rendered from the saved notebook outputs and the Mage UI is a real browser screenshot of my local Mage server.", B),
       P("A3. pytest, local red then green", H2), code(rd("a3_red_pytest.txt")[-700:] + "\n\n" + rd("a3_green_pytest.txt")),
       P("C1. mage run iris_project iris_classifier --test", H2), code(rd("c1_mage_run_test.txt")),
       P("C2. max_depth runs (raw output)", H2), code(rd("c2_depth_runs.txt")),
@@ -242,18 +242,30 @@ S += [PageBreak(), P("Appendix (evidence; excluded from the 8-page limit)", H1),
 
 
 
-# ---- screenshot placeholders ----
-S += [P("Screenshots (insert each image under its heading; delete the grey line afterwards)", H2)]
-S += [P("<b>A3 - GitHub Actions: GREEN (passing) run</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: Actions tab, run with a green tick ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>A3 - GitHub Actions: RED (failing) run</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: run after temporarily setting test_size = 0.3, then the commit that fixes it ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>B1 - Snowflake: baseline outputs</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the first run_pipeline() output and the B1 comparison table (all OK) ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>B3 - Snowflake: reasons for ORD-1006 before and after</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the two cells that show the reasons array ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>B4 - Snowflake: SCD2 change and idempotency</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: prediction-vs-actual table and dim.customers_scd2 for CUST-02 ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>B5 - Snowflake: new check failing (PROBLEM) and fixed</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: the run with ORD-9001 and the run after cleanup ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>C1 - Mage run (terminal)</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: output of: mage run iris_project iris_classifier --test ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>C3 - Mage UI: pipeline graph with the branch</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: through the Cloudflare tunnel: train_model -> save_results and evaluate_model ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>D2 / D3 - RabbitMQ: dispatcher + at least three drivers</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: consoles after about 2 minutes; show ACK lines and the NACK (REJECTED) lines ]</i></font>", B), Spacer(1, 70)]
-S += [P("<b>Bonus - Snowflake: two stream batches</b>", B), P("<font color='#888888'><i>[ Insert screenshot here: gold totals identical after batch 1 and batch 2 ]</i></font>", B), Spacer(1, 70)]
+# ---- screenshots (real pixels where possible; see captions) ----
+from PIL import Image as _PI
+def _shot(title, fname, caption, w=16.5):
+    p = "screenshots/" + fname
+    out = [P("<b>" + title + "</b>", B)]
+    if os.path.exists(p):
+        iw, ih = _PI.open(p).size
+        out += [Image(p, width=w * cm, height=w * cm * ih / iw),
+                P("<font color='#666666'><i>" + caption + "</i></font>", ParagraphStyle("cap", parent=B, fontSize=7.5, spaceAfter=8))]
+    else:
+        out += [P("<font color='#888888'><i>[ Insert screenshot here ]</i></font>", B), Spacer(1, 70)]
+    return [KeepTogether(out)]
+LOCAL = "Rendered from the real saved output of the notebook elt/freshcart_elt.ipynb (run on my own Snowflake account)."
+S += [P("Screenshots", H2)]
+S += _shot("A3 - GitHub Actions: green, red (test_size = 0.3) and green again after the fix", "A3_github_actions_runs.png",
+           "Screenshot of the public Actions page of the repository: CI #1 green, CI #2 red, CI #3 green (fix). Add your own screenshot of the red run's failing pytest step if you wish.")
+S += _shot("B1 - Baseline run and comparison with the expected numbers", "B1_baseline.png", LOCAL)
+S += _shot("B3 - reasons for ORD-1006 before and after the new rule", "B3_reasons.png", LOCAL)
+S += _shot("B4 - SCD2 change, prediction vs actual, idempotency", "B4_scd2.png", LOCAL)
+S += _shot("B5 - new check fails on purpose, then passes after cleanup", "B5_quality_check.png", LOCAL)
+S += _shot("C1 - mage run iris_project iris_classifier --test", "C1_mage_run_test.png", "Terminal output of the real run (saved from the command; see evidence/c1_mage_run_test.txt).")
+S += _shot("C3 - Mage UI: pipeline graph with the branch", "c3_mage_ui.png", "Real screenshot of the Mage UI (local server, headless browser): train_model has two downstream blocks, save_results and evaluate_model.", w=16.5)
+S += _shot("D2 / D3 - dispatcher and three drivers (2-minute run): ACK and NACK", "D2_D3_stream_consoles.png", "Console output of the real 2-minute run (evidence/stream/*.log); long JSON bodies of the NACKed lines are abbreviated.")
+S += _shot("Bonus - gold totals identical after both stream batches", "Bonus_stream_to_gold.png", LOCAL)
 S += [PageBreak()]
 
 # ---- appendix: text copies of the Snowflake notebook outputs ----
