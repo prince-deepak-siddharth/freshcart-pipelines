@@ -46,7 +46,7 @@ for f in _flat(br.S):
         n = f.style.name
         if n == "T":
             p = d.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; fill(p, f.text, 20, RGBColor(0x1F, 0x4E, 0x79), True)
-        elif n in ("s", "s2"):
+        elif n in ("s", "s2", "s3"):
             p = d.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; fill(p, f.text)
         elif n == "BL":
             p = d.add_paragraph(style="List Bullet"); p.paragraph_format.space_after = Pt(2); fill(p, f.text)

@@ -48,7 +48,8 @@ F = lambda t: "<font face='Courier'>" + t + "</font>"
 S = []
 S += [P("<b>Assignment: From Git to Gold</b>", ParagraphStyle("T", parent=H1, fontSize=17, alignment=1)),
       P("Data Engineering &middot; Pipeline Orchestration", ParagraphStyle("s", parent=B, alignment=1)),
-      P("Name: ______________________ &nbsp;&nbsp; Roll No: ______________ &nbsp;&nbsp; GitHub: https://github.com/&lt;your-user&gt;/freshcart-pipelines", ParagraphStyle("s2", parent=B, alignment=1)),
+      P("<b>Name:</b> Prince Deepak Siddharth &nbsp;&nbsp;|&nbsp;&nbsp; <b>Roll No:</b> 23BCS201", ParagraphStyle("s2", parent=B, alignment=1)),
+      P("<b>GitHub:</b> https://github.com/prince-deepak-siddharth/freshcart-pipelines", ParagraphStyle("s3", parent=B, alignment=1)),
       Spacer(1, 4)]
 
 # ------------------------------------------------------------------ PART A
